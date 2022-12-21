@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link href="styles.css" rel="stylesheet" />
+    <title>Trivia!</title>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Trivia!</h1>
+    </div>
+
+    <div class="container">
+      <div class="section">
+        <h2>Part 1: Multiple Choice</h2>
+        <hr />
+        <!-- TODO: Add multiple choice question here -->
+        <h3>Flask is a web framework based on which programming language?</h3>
+        <button class="red">Scratch</button>
+        <button class="red">C</button>
+        <button class="green">Python</button>
+        <button class="red">JavaScript</button>
+        <p id="check1"></p>
+      </div>
+
+      <div class="section">
+        <h2>Part 2: Free Response</h2>
+        <hr />
+        <!-- TODO: Add free response question here -->
+        <h3>In which year David completed his Ph.D.?</h3>
+        <input type="text" id="answer" />
+        <button type="submit" id="check-btn">Check</button>
+        <p id="check2"></p>
+      </div>
+    </div>
+    <script>
+      // TODO: Add code to check answers to questions
+
+      // Part 1
+      document.querySelector(".green").addEventListener("click", function (e) {
+        e.target.style.backgroundColor = "green";
+        document.querySelector("#check1").innerText = "Correct!";
+      });
+
+      function turn_red(btn) {
+        btn.addEventListener("click", function () {
+          btn.style.backgroundColor = "red";
+          document.querySelector("#check1").innerText = "Incorrect";
+        });
+      }
+
+      document.querySelectorAll(".red").forEach(turn_red);
+
+      // Part 2
+      function onclick() {
+        let input = document.querySelector("#answer");
+        let answer = input.value;
+        let check = document.querySelector("#check2");
+        // console.log(answer);
+        if (answer === "2007") {
+          input.style.backgroundColor = "green";
+          check.innerText = "Correct!";
+        } else {
+          input.style.backgroundColor = "red";
+          check.innerText = "Incorrect";
+        }
+      }
+      document.querySelector("#check-btn").addEventListener("click", onclick);
+    </script>
+  </body>
+</html>
