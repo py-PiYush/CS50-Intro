@@ -155,7 +155,14 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    return apology("TODO")
+    rows = db.execute("SELECT * FROM history WHERE id=?", session["user_id"])
+    data = []
+    for row in rows:
+        _, symbol, shares, price, action, time = row.values()
+        if action == "sell":
+            shares = -shares
+        data.append({"symbol": symbol, "shares": shares, "price": price, "time": time})
+    return render_template("history.html", data=data)
 
 
 @app.route("/login", methods=["GET", "POST"])
