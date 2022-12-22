@@ -1,0 +1,44 @@
+{% extends "layout.html" %} {% block title %} Portfolio {% endblock %} {% block
+main %}
+<div class="container text-center">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Symbol</th>
+        <th scope="col">Name</th>
+        <th scope="col" class="text-end">Shares</th>
+        <th scope="col" class="text-end">Price</th>
+        <th scope="col" class="text-end">TOTAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in data %}
+      <tr>
+        <td>{{row['symbol']}}</td>
+        <td>{{row['name']}}</td>
+        <td class="text-end">{{ row['shares'] }}</td>
+        <td class="text-end">{{ row['price'] }}</td>
+        <td class="text-end">{{ row['total'] }}</td>
+      </tr>
+      {%endfor%}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="border-0 text-end"></td>
+        <td class="border-0 text-end"></td>
+        <td class="border-0 text-end"></td>
+        <td class="border-0 text-end"><b>Cash</b></td>
+        <td class="border-0 text-end">{{ cash }}</td>
+      </tr>
+      <tr>
+        <td class="border-0 text-end"></td>
+        <td class="border-0 text-end"></td>
+        <td class="border-0 text-end"></td>
+        <td class="border-0 text-end"><b>TOTAL</b></td>
+        <td class="border-0 text-end">{{ total_all }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+{% endblock %}
