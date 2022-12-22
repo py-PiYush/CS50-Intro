@@ -81,18 +81,18 @@ def buy():
         symbol = request.form.get("symbol")
         number = request.form.get("shares")
         if not symbol:
-            return apology("must provide symbol", 403)
+            return apology("must provide symbol", 400)
 
         # Check for invalid symbol
         data = lookup(symbol)
         if not data:
-            return apology("invalid symbol", 403)
+            return apology("invalid symbol", 400)
 
         # Ensure shares is a valid number
         if not number:
-            return apology("must provide number", 403)
+            return apology("must provide number", 400)
         if not number.isdigit() or (number.isdigit() and int(number) < 0):
-            return apology("invalid number", 403)
+            return apology("invalid number", 400)
 
         # Get user's cash as float
         rows = db.execute("SELECT * FROM users WHERE id=?", session["user_id"])
@@ -104,7 +104,7 @@ def buy():
 
         # Check if user can buy it
         if total > cash:
-            return apology("Not enough cash", 403)
+            return apology("Not enough cash", 400)
 
         # Else buy it
         cash -= total
@@ -223,11 +223,11 @@ def quote():
     if request.method == "POST":
         symbol = request.form.get("symbol")
         if not symbol:
-            return apology("must provide symbol", 403)
+            return apology("must provide symbol", 400)
         data = lookup(symbol)
         data["price"] = usd(data["price"])
         if not data:
-            return apology("invalid symbol", 403)
+            return apology("invalid symbol", 400)
         return render_template("show_quote.html", data=data)
     else:
         return render_template("quote.html")
@@ -239,20 +239,20 @@ def register():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        confirm = request.form.get("confirm-password")
+        confirm = request.form.get("confirmation")
 
         # Validations
         if not username:
-            return apology("must provide username", 403)
+            return apology("must provide username", 400)
         if not password or not confirm:
-            return apology("must provide password", 403)
+            return apology("must provide password", 400)
         if password != confirm:
-            return apology("password didn't match", 403)
+            return apology("password didn't match", 400)
 
         # Check for username already in use
         rows = db.execute("SELECT * FROM users WHERE username = ?", username)
         if len(rows) > 0:
-            return apology("username already taken", 403)
+            return apology("username already taken", 400)
 
         # Generate password hash
         password = generate_password_hash(password)
@@ -281,13 +281,13 @@ def sell():
         number = request.form.get("shares")
         # Validations
         if not symbol:
-            return apology("must provide symbol", 403)
+            return apology("must provide symbol", 400)
 
         # Ensure shares is a valid number
         if not number:
-            return apology("must provide number", 403)
+            return apology("must provide number", 400)
         if not number.isdigit() or (number.isdigit() and int(number) < 0):
-            return apology("invalid number", 403)
+            return apology("invalid number", 400)
         number = int(number)
 
         # Check if user has that stock and number is less than equal to available shares
@@ -300,7 +300,7 @@ def sell():
             return apology("no stocks available")
         shares = rows[0]["shares"]
         if shares < number:
-            return apology("Can' sell these many shares", 403)
+            return apology("Can' sell these many shares", 400)
 
         # Sell it
         price = lookup(symbol)["price"]
@@ -332,7 +332,7 @@ def sell():
             "INSERT INTO history (id, symbol, shares, price, action, date) VALUES (?, ?, ?, ?, 'sell', datetime('now'))",
             session["user_id"],
             symbol,
-            shares,
+            number,
             price,
         )
 
@@ -352,7 +352,7 @@ def add_cash():
         try:
             amount = float(request.form.get("amount"))
         except:
-            return apology("Cannot add cash", 403)
+            return apology("Cannot add cash", 400)
 
         # Get user's cash
         cash = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0][
