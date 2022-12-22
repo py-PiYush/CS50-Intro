@@ -50,7 +50,79 @@ def index():
 @login_required
 def buy():
     """Buy shares of stock"""
-    return apology("TODO")
+    if request.method == "POST":
+        # Validate the input
+        symbol = request.form.get("symbol")
+        number = request.form.get("shares")
+        if not symbol:
+            return apology("must provide symbol", 403)
+
+        # Check for invalid symbol
+        data = lookup(symbol)
+        if not data:
+            return apology("invalid symbol", 403)
+
+        # Ensure shares is a valid number
+        if not number:
+            return apology("must provide number", 403)
+        if not number.isdigit() or (number.isdigit() and int(number) < 0):
+            return apology("invalid number", 403)
+
+        # Get user's cash as float
+        rows = db.execute("SELECT * FROM users WHERE id=?", session["user_id"])
+        cash = rows[0]["cash"]
+
+        # total value of shares
+        number = int(number)
+        total = number * data["price"]
+
+        # Check if user can buy it
+        if total > cash:
+            return apology("Not enough cash", 403)
+
+        # Else buy it
+        cash -= total
+
+        # Updating the databases
+
+        db.execute("UPDATE users SET cash = ? WHERE id = ?", cash, session["user_id"])
+
+        # check if this stock is already bought, if yes update else insert
+        rows = db.execute(
+            "SELECT * FROM stocks WHERE user_id = ? AND symbol=?",
+            session["user_id"],
+            symbol,
+        )
+        if len(rows):
+            db.execute(
+                "UPDATE stocks SET shares = ? WHERE user_id = ? AND symbol=?",
+                rows[0]["shares"] + number,
+                session["user_id"],
+                symbol,
+            )
+        else:
+            db.execute(
+                "INSERT INTO stocks (user_id, symbol, shares) VALUES (?, ?, ?)",
+                session["user_id"],
+                symbol,
+                number,
+            )
+
+        # Update transaction history
+        db.execute(
+            "INSERT INTO history (id, symbol, shares, price, action, date) VALUES (?, ?, ?, ?, 'buy', datetime('now'))",
+            session["user_id"],
+            symbol,
+            number,
+            data["price"],
+        )
+
+        flash("Bought!")
+
+        return redirect("/")
+
+    else:
+        return render_template("buy.html")
 
 
 @app.route("/history")
