@@ -268,4 +268,70 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    return apology("TODO")
+    rows = db.execute("SELECT symbol FROM stocks WHERE user_id=?", session["user_id"])
+    if request.method == "POST":
+        symbol = request.form.get("symbol")
+        number = request.form.get("shares")
+        # Validations
+        if not symbol:
+            return apology("must provide symbol", 403)
+
+        # Ensure shares is a valid number
+        if not number:
+            return apology("must provide number", 403)
+        if not number.isdigit() or (number.isdigit() and int(number) < 0):
+            return apology("invalid number", 403)
+        number = int(number)
+
+        # Check if user has that stock and number is less than equal to available shares
+        rows = db.execute(
+            "SELECT shares FROM stocks WHERE symbol=? AND user_id=?",
+            symbol,
+            session["user_id"],
+        )
+        if len(rows) < 1:
+            return apology("no stocks available")
+        shares = rows[0]["shares"]
+        if shares < number:
+            return apology("Can' sell these many shares", 403)
+
+        # Sell it
+        price = lookup(symbol)["price"]
+        # Update user's cash and shares
+        shares -= number
+        cash = db.execute("SELECT cash FROM users WHERE id=?", session["user_id"])[0][
+            "cash"
+        ]
+        cash += number * price
+        db.execute("UPDATE users SET cash=? WHERE id=?", cash, session["user_id"])
+
+        if shares == 0:
+            # Delete that stock from table
+            db.execute(
+                "DELETE FROM stocks WHERE symbol = ? AND user_id = ?",
+                symbol,
+                session["user_id"],
+            )
+        else:
+            db.execute(
+                "UPDATE stocks SET shares=? WHERE symbol=? AND user_id=?",
+                shares,
+                symbol,
+                session["user_id"],
+            )
+
+        # Update transaction history
+        db.execute(
+            "INSERT INTO history (id, symbol, shares, price, action, date) VALUES (?, ?, ?, ?, 'sell', datetime('now'))",
+            session["user_id"],
+            symbol,
+            shares,
+            price,
+        )
+
+        flash("Sold!")
+
+        return redirect("/")
+
+    else:
+        return render_template("sell.html", rows=rows)
