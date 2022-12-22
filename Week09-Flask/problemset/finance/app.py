@@ -335,3 +335,30 @@ def sell():
 
     else:
         return render_template("sell.html", rows=rows)
+
+
+@app.route("/addcash", methods=["GET", "POST"])
+@login_required
+def add_cash():
+    """Add cash to the user's account"""
+    if request.method == "POST":
+        try:
+            amount = float(request.form.get("amount"))
+        except:
+            return apology("Cannot add cash", 403)
+
+        # Get user's cash
+        cash = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0][
+            "cash"
+        ]
+
+        # Update user's cash
+        db.execute(
+            "UPDATE users SET cash =  ? WHERE id = ?", cash + amount, session["user_id"]
+        )
+
+        flash("Cash added!")
+
+        return redirect("/")
+    else:
+        return render_template("addcash.html")
