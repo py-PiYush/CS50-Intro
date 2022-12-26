@@ -1,0 +1,24 @@
+{% extends 'base.html' %} {% block title %}
+Memes{% endblock title %} {% block
+content %}
+<div class="container-fluid">
+    <h1>My Collections</h1>
+    {% if contents|length > 0 %}
+    {% for content in contents %}
+    <div class="item">
+        <h2 class="mb-3">r/{{content["subreddit"]}}</h1>
+        <h4 class="title">{{content['title']}}</h4>
+        <img class = "img-fluid" src="{{(content['image'])}}" alt="" />
+        <div class="form">
+            <a href="/remove/{{content.id}}" class="btn btn-secondary">Remove</a>
+        </div>
+            
+    </div>
+
+{% endfor %}
+    
+    {% else %}
+    <h3>Nothing to show here!!</h3>
+    {% endif %}
+    
+</div> {% endblock content %}

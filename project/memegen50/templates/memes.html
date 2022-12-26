@@ -1,0 +1,21 @@
+{% extends 'base.html' %} {% block title %} Memes{% endblock title %} {% block
+content %}
+<div class="container-fluid">
+  <h1 class="mb-3">Memes from subreddit: {{contents[0]["subreddit"]}}</h1>
+  {% for content in contents %}
+  <div class="item">
+    <h4 class="title">{{content['title']}}</h4>
+    <img class="img-fluid" src="{{(content['image'])}}" alt="" />
+    <form action="/add" method="post" class="form">
+      <input type="hidden" name="subreddit" value="{{content['subreddit']}}" />
+      <input type="hidden" name="title" value="{{content['title']}}" />
+      <input type="hidden" name="image" value="{{content['image']}}" />
+      <button type="submit" class="btn btn-secondary">
+        Add to Collections
+      </button>
+    </form>
+  </div>
+
+  {% endfor %}
+</div>
+{% endblock content %}

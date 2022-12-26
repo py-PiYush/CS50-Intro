@@ -1,0 +1,37 @@
+
+html{
+    margin: 0;
+    padding: 0;
+}
+.item{
+    border: 2px solid #cdc8c8 ;
+    border-radius: 5px;
+    max-width:700px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.title{
+    margin-bottom: 20px;
+}
+
+a{
+    text-decoration: none;
+    color: #000;
+}
+a:hover{
+    cursor: pointer;
+    color: #3f3939;
+}
+
+.form{
+    border-top: 2px solid #cdc8c8;
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px 10px 0 10px;
+}
+.btn:hover{
+    cursor: pointer;
+    background-color: #4ab028;
+    color: #000;
+}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %} {% block title %}Register{% endblock title %} {% block
+content %}
+<form action="/register" method="post">
+  <div class="mb-3">
+    <label for="username" class="form-label">Username</label>
+    <input
+      type="text"
+      name="username"
+      id="username"
+      class="form-control mx-auto w-auto"
+      placeholder="Enter Username"
+      autocomplete="off"
+      autofocus
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="password" class="form-label">Password</label>
+    <input
+      type="password"
+      name="password"
+      id="password"
+      class="form-control mx-auto w-auto"
+      placeholder="Enter Password"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="confirm-password" class="form-label">Confirm Password</label>
+    <input
+      type="password"
+      name="confirm-password"
+      id="confirm-password"
+      class="form-control mx-auto w-auto"
+      placeholder="Enter Password Again"
+      required
+    />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Register</button>
+</form>
+{% endblock content %}

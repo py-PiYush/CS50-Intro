@@ -1,0 +1,26 @@
+{% extends 'base.html' %} {% block title %} MemeGen50: Home {% endblock title %}
+{% block content %}
+
+<form action="{{url_for('memegen')}}" method="post">
+  <div class="mb-3">
+    <select class="form-select mx-auto w-auto" name="subreddit" required>
+      <option disabled="" selected="" value="">Subreddit</option>
+      {% for sub in subs %}
+      <option value="{{ sub }}">{{ sub }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <input
+      class="form-control mx-auto w-auto"
+      type="number"
+      name="count"
+      min="1"
+      max="50"
+      placeholder="Count"
+    />
+  </div>
+
+  <button class="btn btn-secondary" type="submit">Get memes</button>
+</form>
+{% endblock content %}
