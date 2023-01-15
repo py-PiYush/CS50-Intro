@@ -6,11 +6,11 @@ content %}
     {% if contents|length > 0 %}
     {% for content in contents %}
     <div class="item">
-        <h2 class="mb-3">r/{{content["subreddit"]}}</h1>
-        <h4 class="title">{{content['title']}}</h4>
-        <img class = "img-fluid" src="{{(content['image'])}}" alt="" />
+        <h2 class="mb-3">r/{{content[1]}}</h1>
+        <h4 class="title">{{content[2]}}</h4>
+        <img class = "img-fluid" src="{{(content[3])}}" alt="" />
         <div class="form">
-            <a href="/remove/{{content.id}}" class="btn btn-secondary">Remove</a>
+            <a href="/remove/{{content[0]}}" class="btn btn-secondary">Remove</a>
         </div>
             
     </div>

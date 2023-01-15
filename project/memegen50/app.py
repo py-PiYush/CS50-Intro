@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, session
 import requests
 from helpers import get_memes, apology, login_required
-from cs50 import SQL
+
+# from cs50 import SQL
+import sqlite3 as s
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -14,7 +16,10 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure cs50 library to use sqlite database
-db = SQL("sqlite:///project.db")
+# db = SQL("sqlite:///project.db")
+
+# con = s.connect("project.db")
+# db = con.cursor()
 
 
 @app.after_request
@@ -47,37 +52,43 @@ def register():
     """Register User"""
     # User reached via POST request
     if request.method == "POST":
+        with s.connect("project.db") as con:
+            db = con.cursor()
+            # Get form inputs
+            username = request.form.get("username")
+            password = request.form.get("password")
+            confirm = request.form.get("confirm-password")
 
-        # Get form inputs
-        username = request.form.get("username")
-        password = request.form.get("password")
-        confirm = request.form.get("confirm-password")
+            # Validations
+            if not username:
+                return apology("must provide username", 400)
+            if not password or not confirm:
+                return apology("must provide password", 400)
+            if password != confirm:
+                return apology("password didn't match", 400)
 
-        # Validations
-        if not username:
-            return apology("must provide username", 400)
-        if not password or not confirm:
-            return apology("must provide password", 400)
-        if password != confirm:
-            return apology("password didn't match", 400)
+            # Check for username already in use
+            rows = db.execute(
+                "SELECT * FROM users WHERE username = ?", (username,)
+            ).fetchall()
+            if len(rows) > 0:
+                return apology("username already taken", 400)
 
-        # Check for username already in use
-        rows = db.execute("SELECT * FROM users WHERE username = ?", username)
-        if len(rows) > 0:
-            return apology("username already taken", 400)
+            # Generate password hash
+            password = generate_password_hash(password)
 
-        # Generate password hash
-        password = generate_password_hash(password)
+            # Insert into database
+            db.execute(
+                "INSERT INTO users (username, hash) VALUES(?, ?)", (username, password)
+            )
+            con.commit()
 
-        # Insert into database
-        db.execute(
-            "INSERT INTO users (username, hash) VALUES(?, ?)", username, password
-        )
-
-        # Login user and redirect to homepage
-        rows = db.execute("SELECT * FROM users WHERE username=?", username)
-        session["user_id"] = rows[0]["id"]
-        return redirect("/")
+            # Login user and redirect to homepage
+            rows = db.execute(
+                "SELECT * FROM users WHERE username=?", (username,)
+            ).fetchall()
+            session["user_id"] = rows[0][0]
+            return redirect("/")
 
     # User reached iva GET request
     else:
@@ -92,31 +103,35 @@ def login():
 
     # User reached via POST request
     if request.method == "POST":
-        # Get and validate username
-        username = request.form.get("username")
-        if not username:
-            return apology("must provide username")
+        with s.connect("project.db") as con:
+            db = con.cursor()
+            # Get and validate username
+            username = request.form.get("username")
+            if not username:
+                return apology("must provide username")
 
-        # Get and validate password
-        password = request.form.get("password")
-        if not password:
-            return apology("must provide password")
+            # Get and validate password
+            password = request.form.get("password")
+            if not password:
+                return apology("must provide password")
 
-        # Query database for this username
-        rows = db.execute("SELECT * FROM users WHERE username=?", username)
+            # Query database for this username
+            rows = db.execute(
+                "SELECT * FROM users WHERE username=?", (username,)
+            ).fetchall()
 
-        # Validate Username and Password
-        if len(rows) != 1:
-            return apology("Invalid username or password")
-        password_hash = rows[0]["hash"]
-        if not check_password_hash(password_hash, password):
-            return apology("Invalid username or password")
+            # Validate Username and Password
+            if len(rows) != 1:
+                return apology("Invalid username ")
+            password_hash = rows[0][2]
+            if not check_password_hash(password_hash, password):
+                return apology("Invalid password")
 
-        # Log user in
-        session["user_id"] = rows[0]["id"]
+            # Log user in
+            session["user_id"] = rows[0][0]
 
-        # Redirect to home page
-        return redirect("/")
+            # Redirect to home page
+            return redirect("/")
 
     # User reached via GET request
     else:
@@ -140,6 +155,7 @@ def logout():
 def memegen():
     """Get memes from subreddit"""
     # User reached via POST request
+    contents = []
     if request.method == "POST":
         # Get and validate subreddit name
         subreddit = request.form.get("subreddit")
@@ -163,9 +179,9 @@ def memegen():
         return render_template("memes.html", contents=contents)
 
     # User reached via GET (manually entering the link)
-    else:
-        # Redirect to home page
-        return redirect("/")
+
+    # Redirect to home page
+    return redirect("/")
 
 
 @app.route("/add", methods=["GET", "POST"])
@@ -184,22 +200,22 @@ def add():
 
         if subreddit not in SUBS:
             return apology("Invalid subreddit")
+        with s.connect("project.db") as con:
+            db = con.cursor()
+            # Check if already exists
+            rows = db.execute(
+                "SELECT * FROM collections WHERE image=?", (image,)
+            ).fetchall()
+            if len(rows) > 0:
+                return apology("Already saved")
 
-        # Check if already exists
-        rows = db.execute("SELECT * FROM collections WHERE image=?", image)
-        if len(rows) > 0:
-            return apology("Already saved")
-
-        # Insert into database
-        db.execute(
-            "INSERT INTO collections(subreddit, title, image, link, user_id) VALUES(?,?,?,?,?)",
-            subreddit,
-            title,
-            image,
-            "#",
-            session["user_id"],
-        )
-        return redirect("/show")
+            # Insert into database
+            db.execute(
+                "INSERT INTO collections(subreddit, title, image, link, user_id) VALUES(?,?,?,?,?)",
+                (subreddit, title, image, "#", session["user_id"]),
+            )
+            con.commit()
+        return redirect("/memegen")
 
 
 @app.route("/show")
@@ -207,19 +223,29 @@ def add():
 def show():
     """Shows user's collection of memes"""
     # Get contents from database
-    rows = db.execute("SELECT * FROM collections WHERE user_id=?", session["user_id"])
-    return render_template("show.html", contents=rows)
+    with s.connect("project.db") as con:
+        db = con.cursor()
+        rows = db.execute(
+            "SELECT * FROM collections WHERE user_id=?", (session["user_id"],)
+        ).fetchall()
+        return render_template("show.html", contents=rows)
 
 
 @app.route("/remove/<int:id>")
 @login_required
 def remove(id):
     """Removes a meme from collection"""
-    # Query database for the given id to check if it exists
-    rows = db.execute("SELECT * FROM collections WHERE id=?", id)
-    if len(rows) == 0:
-        return apology("bad request")
+    with s.connect("project.db") as con:
+        db = con.cursor()
+        # Query database for the given id to check if it exists
+        rows = db.execute("SELECT * FROM collections WHERE id=?", (id,)).fetchall()
+        if len(rows) == 0:
+            return apology("bad request")
 
-    # Delete
-    db.execute("DELETE FROM collections WHERE id=?", id)
-    return redirect("/show")
+        # Delete
+        db.execute("DELETE FROM collections WHERE id=?", (id,))
+        con.commit()
+        return redirect("/show")
+
+
+# con.close()
